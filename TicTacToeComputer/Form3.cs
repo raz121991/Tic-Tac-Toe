@@ -14,11 +14,12 @@ namespace TicTacToe
 {
     public partial class Form3 : Form
     {
-       
-        private int playerScore = 0;
-        private int computerScore = 0;
-        private int switchTurnsInDraw = 0;
+        private int m_playerScore = 0;
+        private int m_computerScore = 0;
+        private int m_switchTurnsInDraw = 0;
         private PictureBox[] gameSlots;
+        private Winner m_winner = Winner.None;
+        private PlayerTurn m_playerTurn;
 
         private enum PlayerTurn
         {
@@ -35,16 +36,12 @@ namespace TicTacToe
             Draw
         }
 
-        private Winner winner = Winner.None;
-        private PlayerTurn playerTurn;
-
-      
 
         public Form3()
         {
             InitializeComponent();
             //set the pictures array containing the images of all the slots of the game.
-            gameSlots = new PictureBox[9]
+            gameSlots = new PictureBox[]
             {
                  pictureBox0, pictureBox1, pictureBox2, pictureBox3, pictureBox4, pictureBox5,
                 pictureBox6, pictureBox7, pictureBox8
@@ -185,11 +182,11 @@ namespace TicTacToe
             //switching players every turn
             if(winner == Winner.None)
             {
-                playerTurn = playerTurn == PlayerTurn.Player ? PlayerTurn.Computer : PlayerTurn.Player;
+                m_playerTurn = m_playerTurn == PlayerTurn.Player ? PlayerTurn.Computer : PlayerTurn.Player;
             }
             else
             {
-                playerTurn = PlayerTurn.None;
+                m_playerTurn = PlayerTurn.None;
             }
                 
         }
@@ -200,29 +197,29 @@ namespace TicTacToe
             PictureBox picture = sender as PictureBox;
 
             //setting player mode to none to prevent the game keep working after the game is over.
-            if (playerTurn == PlayerTurn.None)
+            if (m_playerTurn == PlayerTurn.None)
                 return;
 
             // making sure that the image won't change once its clicked
             if (picture.Image != null)
                 return;
 
-            if (playerTurn == PlayerTurn.Player)
+            if (m_playerTurn == PlayerTurn.Player)
                 picture.Image = player1.Image;
-
+             
+             m_winner = CheckWinner();            
+             ShowWinner(m_winner);
              ShowTurn();
-             winner = CheckWinner();            
-             ShowWinner(winner);
-             TurnsManaging(winner);
+             TurnsManaging(m_winner);
 
             //once the player finishes his turn, the event call immidiatly to the AI computer method to do its move.
-            if (playerTurn == PlayerTurn.Computer && winner == Winner.None)
+            if (m_playerTurn == PlayerTurn.Computer && m_winner == Winner.None)
             {
                 
                 ComputerPlay();
-                winner = CheckWinner();
-                ShowWinner(winner);
-                TurnsManaging(winner);
+                m_winner = CheckWinner();
+                ShowWinner(m_winner);
+                TurnsManaging(m_winner);
                 ShowTurn();
             }
         }
@@ -231,12 +228,12 @@ namespace TicTacToe
         {
             if (winner == Winner.Player)
             {
-                playerScore++;
+                m_playerScore++;
                 MessageBox.Show("You Won!", "Game Over", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
             else if (winner == Winner.Computer)
             {
-                    computerScore++;
+                    m_computerScore++;
                     MessageBox.Show("Computer won!", "Game Over", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                 
             }
@@ -297,16 +294,16 @@ namespace TicTacToe
                 
             }
             //displaying the players score
-            lblScorep1.Text += playerScore.ToString();
-            lblScorep2.Text += computerScore.ToString();
+            lblScorep1.Text += m_playerScore.ToString();
+            lblScorep2.Text += m_computerScore.ToString();
 
             NewGameTurns();
-            //Set winner to none every new game
-            winner = Winner.None;
-            if (playerTurn == PlayerTurn.Computer)
+            //Set m_winner to none every new game
+            m_winner = Winner.None;
+            if (m_playerTurn == PlayerTurn.Computer)
             {
                 ComputerPlay();
-                TurnsManaging(winner);
+                TurnsManaging(m_winner);
             }
                 
             ShowTurn();
@@ -316,14 +313,14 @@ namespace TicTacToe
         private void NewGameTurns()
         {
             //make sure the opposite player who won the game gets to start playing.if its Draw then switch between the two.
-            if(winner == Winner.Player)
-                playerTurn = PlayerTurn.Computer;
-            else if(winner == Winner.Computer || winner == Winner.None)
-                playerTurn = PlayerTurn.Player; 
-            else if (winner == Winner.Draw)
+            if(m_winner == Winner.Player)
+                m_playerTurn = PlayerTurn.Computer;
+            else if(m_winner == Winner.Computer || m_winner == Winner.None)
+                m_playerTurn = PlayerTurn.Player; 
+            else if (m_winner == Winner.Draw)
             {
-                switchTurnsInDraw = switchTurnsInDraw == 0 ? 1 : 0;
-                playerTurn = switchTurnsInDraw == 0 ? PlayerTurn.Computer : PlayerTurn.Player;
+                m_switchTurnsInDraw = m_switchTurnsInDraw == 0 ? 1 : 0;
+                m_playerTurn = m_switchTurnsInDraw == 0 ? PlayerTurn.Computer : PlayerTurn.Player;
             } 
         }
 
@@ -331,10 +328,10 @@ namespace TicTacToe
         private void ShowTurn()
         {
             string status = "";
-            status = DisplayTurn(winner);
+            status = DisplayTurn(m_winner);
 
-            lblScorep1.Text = "Score: " + playerScore.ToString();
-            lblScorep2.Text = "Score: " + computerScore.ToString();
+            lblScorep1.Text = "Score: " + m_playerScore.ToString();
+            lblScorep2.Text = "Score: " + m_computerScore.ToString();
             lblStatus.Text = status;
         }
 
@@ -346,7 +343,7 @@ namespace TicTacToe
             {
                 case Winner.None:
 
-                    if (playerTurn == PlayerTurn.Player)
+                    if (m_playerTurn == PlayerTurn.Player)
                         status = "Turn: Player ";
                     else
                     {
@@ -392,10 +389,10 @@ namespace TicTacToe
         private void resetBtn_Click(object sender, EventArgs e)
         {
             //set the scores to 0 and update the scores text in the client.
-            playerScore = 0;
-            computerScore = 0;
-            lblScorep1.Text = "Score: " + playerScore.ToString();
-            lblScorep2.Text = "Score: " + computerScore.ToString();
+            m_playerScore = 0;
+            m_computerScore = 0;
+            lblScorep1.Text = "Score: " + m_playerScore.ToString();
+            lblScorep2.Text = "Score: " + m_computerScore.ToString();
         }
 
         private void mainMenuToolStripMenuItem_Click(object sender, EventArgs e)
